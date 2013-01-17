@@ -1,42 +1,32 @@
 /*
-Firefox_hook (C) Raja Jamwal 2011
-Distributed under GNU GPL License
- 
-Firefox_hook is an example code for Chrom Library, Firefox_hook log every
-HTTP/HTTPS requests that firefox makes
- 
-Chrom, is API/Funtion interception/hijacking library for windows systems
-Copyright (C) 2011  Raja Jamwal
- 
-This file is part of Chrom.
+    Injector (C) Matthias Ableitner 2013
+
+    This file is part of injector.
+
+    Injector is free software: you can redistribute it and/or modify it under
+	the terms of the GNU General Public License as published by the Free
+	Software Foundation, either version 2 of the License, or (at your option)
+	any later version.
+
+    Injector is distributed in the hope that it will be useful, but
+	WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+	or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+	for more details.
+
+    You should have received a copy of the GNU General Public License along
+	with Injector. If not, see http://www.gnu.org/licenses/
 */
  
 #include "chrom.h"
 #include <stdlib.h> //getenv
  
-Hook hk; // Hook firefox
+Hook hk; // Hook struct
 
-
-BOOL WINAPI PR_GetComputerName_H(LPTSTR lpBuffer, LPDWORD lpnSize);
 typedef BOOL (*prGetComputerNameA(LPTSTR, LPDWORD)); // original function
 
-// initialize hooking, this adds the jump instruction to original function address
-int create_hooks()
-{
-        // Override PR_Write function in nspr4.dll with our PR_Write_H, 
-        // Note nspr4.dll must already be
-        // loaded in process space
-        //Firefox.Initialize("PR_Write", "nspr4.dll", (void*)PR_Write_H);
-		hk.Initialize("GetComputerNameA", "kernel32.dll", (FARPROC)PR_GetComputerName_H);
-        // Write jump instruction on original function address
-        hk.Start();
-        return TRUE;
-}
-
+//hook function which gets called instead of GetComputerNameA
 BOOL PR_GetComputerName_H(LPTSTR lpBuffer, LPDWORD lpnSize)
 {
-	//hk.Reset();
-	//prw = (prWrite)Firefox.original_function;
 	char* name = getenv("CLIENTNAME");
 	if (name == NULL) {
 		name = getenv("COMPUTERNAME");
@@ -52,16 +42,19 @@ BOOL PR_GetComputerName_H(LPTSTR lpBuffer, LPDWORD lpnSize)
 	lpBuffer[len]=0;
 	*lpnSize = len;
 	//MessageBox(0, name, "test" , MB_OK);
-	//hk.Place_Hook
 	return true;
 }
 
+//gets called when dll is loaded and unloaded
 extern "C" BOOL APIENTRY DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH: {
-		create_hooks();
+		// initialize hooking, this adds the jump instruction to original function address
+		hk.Initialize("GetComputerNameA", "kernel32.dll", (FARPROC)PR_GetComputerName_H);
+        // Write jump instruction to original function address
+        hk.Start();
 	}
 	case DLL_THREAD_ATTACH:
 	case DLL_THREAD_DETACH:
