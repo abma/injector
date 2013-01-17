@@ -43,8 +43,8 @@ bool InjectDll(DWORD ProcessID, const char* DllFilePath)
 
     WaitForSingleObject(hRemoteThread, INFINITE);
     GetExitCodeThread(hRemoteThread, &ThreadTeminationStatus);
-    FreeLibrary(hModule);
 
+    FreeLibrary(hModule);
     VirtualFreeEx(hProcess, NULL, (size_t)strlen(DllFilePath), MEM_RESERVE | MEM_COMMIT);
     CloseHandle(hRemoteThread);
     CloseHandle(hProcess); 
@@ -65,11 +65,12 @@ int main(int argc, char** argv){
 	PROCESS_INFORMATION piProcessInfo;
 	memset(&piProcessInfo, 0, sizeof(piProcessInfo));
 	printf("Running %s\n", str.c_str());
-	if (!CreateProcess(NULL, (LPSTR)str.c_str(), 0, 0, false, CREATE_DEFAULT_ERROR_MODE, 0, 0, &siStartupInfo, &piProcessInfo )) {
+	if (!CreateProcess(NULL, (LPSTR)str.c_str(), 0, 0, false, CREATE_DEFAULT_ERROR_MODE|CREATE_SUSPENDED, 0, 0, &siStartupInfo, &piProcessInfo )) {
 		printerr();
 		return 1;
 	}
 	const char* injectdll = "libhook.dll";
 	InjectDll(piProcessInfo.dwProcessId, injectdll);
+	ResumeThread(piProcessInfo.hThread);
 	return 0;
 }

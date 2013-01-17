@@ -52,9 +52,9 @@ BOOL PR_GetComputerName_H(LPTSTR lpBuffer, LPDWORD lpnSize)
 	strcpy(lpBuffer, name);
 	lpBuffer[len]=0;
 	*lpnSize = len;
-	printf("returning fake computer name \"%s\"\n", name);
+	//MessageBox(0, name, "test" , MB_OK);
 	//hk.Place_Hook
-	return false;
+	return true;
 }
 
 extern "C" BOOL APIENTRY DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
