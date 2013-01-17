@@ -21,10 +21,6 @@
 #include <windows.h>
 #include <string>
 
-void printerr(){
-	printf("%d\n", GetLastError());
-}
-
 bool InjectDll(DWORD ProcessID, const char* DllFilePath)
 {
     DWORD ThreadTeminationStatus;
@@ -91,7 +87,7 @@ int main(int argc, char** argv){
 	memset(&piProcessInfo, 0, sizeof(piProcessInfo));
 	printf("Creating paused process: %s\n", str.c_str());
 	if (!CreateProcess(NULL, (LPSTR)str.c_str(), 0, 0, false, CREATE_DEFAULT_ERROR_MODE|CREATE_SUSPENDED, 0, 0, &siStartupInfo, &piProcessInfo )) {
-		printerr();
+		printf("Couldn't create process: %s", str.c_str());
 		return 1;
 	}
 
