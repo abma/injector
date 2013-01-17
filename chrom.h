@@ -26,7 +26,6 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include <windows.h>
-#include <fstream>
 
 using namespace std;
 #define SIZE 6
@@ -48,8 +47,6 @@ struct Hook{
 	~Hook(){
 		if (original_function!=0) {
 			memcpy((void*) original_function, original_bytes, SIZE);
-		} else {
-			printf("couldn't restore original function!");
 		}
 	}
 
@@ -58,13 +55,11 @@ struct Hook{
 	
 		HMODULE module_handle = GetModuleHandle(module_name);
 		if (module_handle == NULL) {
-			printf("GetModuleHandle failed!\n");
 			return FALSE;
 		}
 		
 		original_function = GetProcAddress(module_handle, function);
 		if (original_function==NULL){
-			printf("GetProcAddress(%s, %s) failed", module_name, function);
 			return FALSE;
 		}
 		destination_function = destination_function_ptr;

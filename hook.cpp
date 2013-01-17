@@ -42,7 +42,6 @@ BOOL PR_GetComputerName_H(LPTSTR lpBuffer, LPDWORD lpnSize)
 		name = getenv("COMPUTERNAME");
 	}
 	if (name == NULL) {
-		printf("CLIENTNAME and COMPUTERNAME is NULL!\n");
 		return false;
 	}
 	const int len=strlen(name);

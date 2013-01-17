@@ -64,13 +64,15 @@ int main(int argc, char** argv){
 	siStartupInfo.cb = sizeof(siStartupInfo); 
 	PROCESS_INFORMATION piProcessInfo;
 	memset(&piProcessInfo, 0, sizeof(piProcessInfo));
-	printf("Running %s\n", str.c_str());
+	printf("Creating paused process: %s\n", str.c_str());
 	if (!CreateProcess(NULL, (LPSTR)str.c_str(), 0, 0, false, CREATE_DEFAULT_ERROR_MODE|CREATE_SUSPENDED, 0, 0, &siStartupInfo, &piProcessInfo )) {
 		printerr();
 		return 1;
 	}
 	const char* injectdll = "libhook.dll";
+	printf("Injecting hook\n");
 	InjectDll(piProcessInfo.dwProcessId, injectdll);
+	printf("resuming process\n");
 	ResumeThread(piProcessInfo.hThread);
 	return 0;
 }
