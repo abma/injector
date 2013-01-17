@@ -12,22 +12,14 @@ This file is part of Chrom.
 */
  
 #include "chrom.h"
+#include <stdlib.h> //getenv
  
 Hook hk; // Hook firefox
 
-/*DWORD PR_Write_H (DWORD *fd,  void *buf,DWORD amount); // this is our overiding-function
-typedef DWORD (*prWrite)(DWORD*,void*,DWORD); // definition of our original function
-*/
 
 BOOL WINAPI PR_GetComputerName_H(LPTSTR lpBuffer, LPDWORD lpnSize);
 typedef BOOL (*prGetComputerNameA(LPTSTR, LPDWORD)); // original function
 
- 
-//prGetComputerNameA prw = NULL; // create an original function, we later point this to original function
-                    // address
- 
-
- 
 // initialize hooking, this adds the jump instruction to original function address
 int create_hooks()
 {
@@ -45,18 +37,33 @@ BOOL PR_GetComputerName_H(LPTSTR lpBuffer, LPDWORD lpnSize)
 {
 	//hk.Reset();
 	//prw = (prWrite)Firefox.original_function;
-	MessageBox(0, "GetFakeComputerName", "GetFakeComputerName", MB_OK);
+	char* name = getenv("CLIENTNAME");
+	if (name == NULL) {
+		name = getenv("COMPUTERNAME");
+	}
+	if (name == NULL) {
+		printf("CLIENTNAME and COMPUTERNAME is NULL!\n");
+		return false;
+	}
+	const int len=strlen(name);
+	if (*lpnSize<len)
+		return false;
+
+	strcpy(lpBuffer, name);
+	lpBuffer[len]=0;
+	*lpnSize = len;
+	printf("returning fake computer name \"%s\"\n", name);
 	//hk.Place_Hook
 	return false;
 }
 
 extern "C" BOOL APIENTRY DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
-	printf("dllmain\n");
 	switch (ul_reason_for_call)
 	{
-	case DLL_PROCESS_ATTACH:
+	case DLL_PROCESS_ATTACH: {
 		create_hooks();
+	}
 	case DLL_THREAD_ATTACH:
 	case DLL_THREAD_DETACH:
 	case DLL_PROCESS_DETACH:
@@ -64,24 +71,3 @@ extern "C" BOOL APIENTRY DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LP
 	}
 	return TRUE;
 }
-
-/*
-// our overriding function
-DWORD PR_Write_H (DWORD *fd,  void *buf,DWORD amount)
-{
-        // reset hooks, this will replace the jump instruction to original data
-        Firefox.Reset();
-        // You may skip the code shown below and call the original function directly
-        // since after calling Firefox.Reset() the address of the original function, 
-        // now contains the original function's data
-        // point prw(function) to original function (optional)
-        prw = (prWrite)Firefox.original_function;
-        // log the headers
-        write_log(log_file, (char*) buf);
-        // call the real PR_Write function
-        DWORD ret = prw(fd, buf, amount);
-        // again place the jump instruction on the original function
-        Firefox.Place_Hook();
-        return ret;
-}
-*/
