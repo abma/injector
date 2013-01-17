@@ -25,7 +25,7 @@ Hook hk; // Hook struct
 typedef BOOL (*prGetComputerNameA(LPTSTR, LPDWORD)); // original function
 
 //hook function which gets called instead of GetComputerNameA
-BOOL PR_GetComputerName_H(LPTSTR lpBuffer, LPDWORD lpnSize)
+extern "C" BOOL APIENTRY PR_GetComputerName_H(LPTSTR lpBuffer, LPDWORD lpnSize)
 {
 	char* name = getenv("CLIENTNAME");
 	if (name == NULL) {
@@ -55,6 +55,7 @@ extern "C" BOOL APIENTRY DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LP
 		hk.Initialize("GetComputerNameA", "kernel32.dll", (FARPROC)PR_GetComputerName_H);
         // Write jump instruction to original function address
         hk.Start();
+		break;
 	}
 	case DLL_THREAD_ATTACH:
 	case DLL_THREAD_DETACH:
