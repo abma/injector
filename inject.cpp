@@ -53,6 +53,12 @@ bool InjectDll(DWORD ProcessID, const char* DllFilePath)
 
 int main(int argc, char** argv){
 	std::string str;
+	if (argc<=1) {
+		printf("Usage: %s program <parameters>", argv[0]);
+		printf("Installs a hook to the program, that fakes the System call GetComputerNameA which returns the env var of CLIENTNAME or COMPUTERNAME if set");
+		printf("can be used to fake the computername to the clientname on a terminal server");
+		return 1;
+	}
 	for (int i=1; i<argc; i++) {
 		if (str.size()!=0)
 			str.append(" ");
