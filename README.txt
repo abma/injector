@@ -16,7 +16,7 @@ can be used to fake the computername to the clientname on a terminal server
 to see results:
   set COMPUTERNAME=fakename
   test.exe
-  inject.exe test.exe
+  injector.exe test.exe
 
 # LICENSE
 
