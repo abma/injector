@@ -17,31 +17,58 @@
 	with Injector. If not, see http://www.gnu.org/licenses/
 */
  
+#define WINVER 0x0501
+
 #include "chrom.h"
 #include <stdlib.h> //getenv
- 
+#include <wtsapi32.h>
+#include <string>
+
+#include <stdio.h>
 Hook hk; // Hook struct
 
 typedef BOOL (*prGetComputerNameA(LPTSTR, LPDWORD)); // original function
 
+std::string GetEnvName() {
+	std::string clientname;
+	char* name = getenv("FAKECOMPUTERNAME");
+	if (name!=NULL) {
+		clientname = std::string(name, strlen(name));
+		printf("GetComputerNameA(): FAKECOMPUTERNAME: %s\n", clientname.c_str());
+		return clientname;
+	}
+	LPTSTR ppBuffer = NULL;
+	DWORD pBytesReturned = 0;
+	if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, WTS_CURRENT_SESSION, WTSClientName, &ppBuffer, &pBytesReturned)) {
+		clientname = std::string(ppBuffer, pBytesReturned);
+		WTSFreeMemory(ppBuffer);
+		if (pBytesReturned>1) {
+			printf("GetComputerNameA(): WTSCLIENTNAME: %s\n", clientname.c_str());
+			return clientname;
+		}
+	}
+	name = getenv("COMPUTERNAME");
+	if (name!=NULL) {
+		clientname = std::string(name, strlen(name));
+		printf("GetComputerNameA(): COMPUTERNAME: %s\n", clientname.c_str());
+		return clientname;
+	}
+	return clientname;
+}
+
 //hook function which gets called instead of GetComputerNameA
 extern "C" BOOL APIENTRY PR_GetComputerName_H(LPTSTR lpBuffer, LPDWORD lpnSize)
 {
-	char* name = getenv("CLIENTNAME");
-	if (name == NULL) {
-		name = getenv("COMPUTERNAME");
-	}
-	if (name == NULL) {
+	const std::string computername = GetEnvName();
+	if (computername.empty()) {
 		return false;
 	}
-	const int len=strlen(name);
-	if (*lpnSize<len)
+	if (*lpnSize<computername.size())
 		return false;
 
-	strcpy(lpBuffer, name);
-	lpBuffer[len]=0;
-	*lpnSize = len;
-	//MessageBox(0, name, "test" , MB_OK);
+	strcpy(lpBuffer, computername.c_str());
+	lpBuffer[computername.size()]=0;
+	*lpnSize = computername.size();
 	return true;
 }
 
