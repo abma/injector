@@ -66,6 +66,27 @@ bool InjectDll(DWORD ProcessID, const char* DllFilePath)
     return true;
 }
 
+std::string getDLLPath(const char* exe)
+{
+	char buf[MAX_PATH];
+	const int len = GetModuleFileName(NULL, buf, sizeof(buf)) - strlen(exe)-1;
+	std::string dll = "libhook.dll";
+	if (len>0) {
+		std::string path = std::string(buf, len);
+		path.append("\\");
+		path.append(dll);
+		return path;
+	}
+	return dll;
+}
+
+BOOL FileExists(LPCTSTR szPath)
+{
+  DWORD dwAttrib = GetFileAttributes(szPath);
+  return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
+         !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+}
+
 int main(int argc, char** argv){
 	std::string str;
 	if (argc<=1) {
@@ -90,10 +111,14 @@ int main(int argc, char** argv){
 		printf("Couldn't create process: %s", str.c_str());
 		return 1;
 	}
+	const std::string injectdll = getDLLPath(argv[0]);
 
-	const char* injectdll = "libhook.dll";
-	printf("Injecting hook\n");
-	InjectDll(piProcessInfo.dwProcessId, injectdll);
+	printf("Injecting hook dll: %s\n", injectdll.c_str());
+	if (!FileExists(injectdll.c_str())) {
+		MessageBox(0, "Couldn't find libhook.dll!","Error!", MB_OK|MB_ICONERROR);
+		return 1;
+	}
+	InjectDll(piProcessInfo.dwProcessId, injectdll.c_str());
 	printf("resuming process\n");
 	ResumeThread(piProcessInfo.hThread);
 	return 0;
