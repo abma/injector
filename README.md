@@ -14,7 +14,7 @@ Installs a hook to the program, that fakes the System call GetComputerNameA whic
 can be used to fake the computername to the clientname on a terminal server
 
 to see results:
-  set COMPUTERNAME=fakename
+  set FAKECOMPUTERNAME=fakename
   test.exe
   injector.exe test.exe
 
